@@ -215,7 +215,7 @@
           console.log(codigo);
           console.log(supermercadoId);
           try {
-            const response = await fetch("http://localhost:3000/api/precios/registrar-precio", {
+            const response = await fetch("https://scansuper.up.railway.app/api/precios/registrar-precio", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
