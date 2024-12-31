@@ -1,34 +1,46 @@
-const express = require("express");
+import "dotenv/config.js";
+import dbConnection from "./src/utils/db.js";
+import express from "express";
+import router from "./src/routers/index.router.js";
+import path from "path";
+import { fileURLToPath } from "url";
+import morgan from "morgan";
+import cors from "cors";
+
+
+
+// Define __dirname manualmente en ES Modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 const app = express();
+app.get("/favicon.ico", (req, res) => res.status(204));
+const corsOptions = {
+  origin: true, // O el puerto donde corre tu cliente
+  credentials: true,
+};
+app.use(cors(corsOptions));
+// Configura morgan en modo "dev" para colores
+app.use(morgan("dev")); // "dev" ya incluye colores por defecto
 
 app.use(express.json());
 
-let precios = []; // Base de datos temporal
+// Configurar el directorio "public" como estático
+app.use(express.static(path.join(__dirname, "public")));
 
-// Registrar un precio
-app.post("/registrar-precio", (req, res) => {
-    const { codigo, precio, tienda, ubicacion } = req.body;
+// Configurar el directorio "scripts" como estático
+app.use("/scripts", express.static(path.join(__dirname, "scripts")));
 
-    if (!codigo || !precio || !tienda) {
-        return res.status(400).send("Faltan datos necesarios.");
-    }
-
-    precios.push({ codigo, precio, tienda, ubicacion, fecha: new Date() });
-    res.send("Precio registrado exitosamente.");
+// Ruta principal para servir el archivo HTML
+app.get("/", (req, res) => {
+    res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
-// Consultar precios para un producto
-app.get("/precios/:codigo", (req, res) => {
-    const { codigo } = req.params;
-    const resultados = precios.filter((p) => p.codigo === codigo);
+//endpoints
+app.use("/", router);
 
-    if (resultados.length === 0) {
-        return res.status(404).send("No se encontraron precios para este producto.");
-    }
-
-    res.json(resultados);
-});
-
+// Iniciar el servidor
 app.listen(3000, () => {
     console.log("Servidor corriendo en http://localhost:3000");
+    dbConnection();
 });

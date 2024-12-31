@@ -1,6 +1,7 @@
 {
   "name": "food",
   "version": "1.0.0",
+  "type": "module",
   "main": "server.js",
   "scripts": {
     "start": "node ./server.js",
@@ -10,8 +11,21 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@zxing/library": "^0.21.3",
+    "axios": "^1.7.9",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
     "express": "^4.21.2",
-    "nodemon": "^3.1.7"
+    "html5-qrcode": "^2.3.8",
+    "instascan": "^1.0.0",
+    "mongoose": "^8.8.4",
+    "morgan": "^1.10.0",
+    "morgan-debug": "^2.0.0",
+    "nodemon": "^3.1.7",
+    "quagga": "^0.12.1"
   },
-  "description": ""
+  "description": "",
+  "devDependencies": {
+    "rollup": "^4.28.1"
+  }
 }
