@@ -22,7 +22,9 @@
 
         barcode.setHandler(async function (codigo) {
           console.log("Código escaneado:", codigo);
-          document.getElementById("result").textContent = `Código detectado: ${codigo}`;
+          document.getElementById(
+            "result"
+          ).textContent = `Código detectado: ${codigo}`;
           sound.play();
 
           const supermercadoSeleccionado = JSON.parse(
@@ -74,7 +76,9 @@
                     `https://scansuper.up.railway.app/api/precios/supermercados?lat=${latitud}&lng=${longitud}`
                   );
                   if (!response.ok) {
-                    throw new Error(`Error en la solicitud: ${response.status}`);
+                    throw new Error(
+                      `Error en la solicitud: ${response.status}`
+                    );
                   }
                   const data = await response.json();
 
@@ -133,7 +137,9 @@
                 "supermercadoSeleccionado",
                 JSON.stringify(selectedSupermarket)
               );
-              document.getElementById("current-supermarket").textContent = `Supermercado seleccionado: ${selectedSupermarket.nombre}`;
+              document.getElementById(
+                "current-supermarket"
+              ).textContent = `Supermercado seleccionado: ${selectedSupermarket.nombre}`;
               supermarketsContainer.innerHTML = ""; // Limpiar la lista
             });
           });
@@ -141,6 +147,16 @@
 
         function mostrarInformacionProducto(data) {
           const infoContainer = document.getElementById("product-info");
+
+          // Verificar si hay precios asignados
+          if (!data.precios || data.precios.length === 0) {
+            infoContainer.innerHTML = `
+      <h2>${data.producto.nombre}</h2>
+      <p><strong>Marca:</strong> ${data.producto.marca}</p>
+      <p><strong>Estado:</strong> Producto sin precio asignado</p>
+    `;
+            return;
+          }
 
           // Ordenar precios por fecha (descendente)
           const preciosOrdenados = data.precios.sort(
@@ -153,8 +169,12 @@
             <h2>${data.producto.nombre}</h2>
             <p><strong>Marca:</strong> ${data.producto.marca}</p>
             <p><strong>Último Precio:</strong> $${ultimoPrecio.precio}</p>
-            <p><strong>Último Supermercado :</strong> ${ultimoPrecio.supermercado.nombre}</p>
-            <p><strong>Última Dirección :</strong> ${ultimoPrecio.supermercado.direccion}</p>
+            <p><strong>Último Supermercado :</strong> ${
+              ultimoPrecio.supermercado.nombre
+            }</p>
+            <p><strong>Última Dirección :</strong> ${
+              ultimoPrecio.supermercado.direccion
+            }</p>
             <br>
             <p><strong>Precio Anterior:</strong> $${
               precioAnterior ? precioAnterior.precio : "N/A"
@@ -166,35 +186,46 @@
               precioAnterior ? precioAnterior.supermercado.direccion : "N/A"
             }</p>
             <br>
-            <img src="${data.producto.imagen}" alt="Imagen del producto" style="max-width: 200px;" />
+            <img src="${
+              data.producto.imagen
+            }" alt="Imagen del producto" style="max-width: 200px;" />
             <br>
             <button id="add-to-cart">Agregar al Carrito</button>
             <button id="update-price">Actualizar Precio</button>
           `;
 
           // Manejar el botón "Agregar al Carrito"
-          document.getElementById("add-to-cart").addEventListener("click", () => {
-            agregarAlCarrito(data.producto, ultimoPrecio);
-          });
+          document
+            .getElementById("add-to-cart")
+            .addEventListener("click", () => {
+              agregarAlCarrito(data.producto, ultimoPrecio);
+            });
 
           // Manejar el botón "Actualizar Precio"
-          document.getElementById("update-price").addEventListener("click", () => {
-            const supermercadoSeleccionado = JSON.parse(
-              localStorage.getItem("supermercadoSeleccionado")
-            );
+          document
+            .getElementById("update-price")
+            .addEventListener("click", () => {
+              const supermercadoSeleccionado = JSON.parse(
+                localStorage.getItem("supermercadoSeleccionado")
+              );
 
-            if (!supermercadoSeleccionado || !supermercadoSeleccionado.id) {
-              alert("Por favor, selecciona un supermercado antes de actualizar el precio.");
-              return;
-            }
+              if (!supermercadoSeleccionado || !supermercadoSeleccionado.id) {
+                alert(
+                  "Por favor, selecciona un supermercado antes de actualizar el precio."
+                );
+                return;
+              }
 
-            actualizarPrecio(ultimoPrecio.codigo, supermercadoSeleccionado.id);
-            console.log("Código:", ultimoPrecio.codigo);
-            console.log(
-              "Supermercado seleccionado:",
-              supermercadoSeleccionado.id
-            );
-          });
+              actualizarPrecio(
+                ultimoPrecio.codigo,
+                supermercadoSeleccionado.id
+              );
+              console.log("Código:", ultimoPrecio.codigo);
+              console.log(
+                "Supermercado seleccionado:",
+                supermercadoSeleccionado.id
+              );
+            });
         }
 
         let carrito = [];
@@ -274,8 +305,16 @@
     </div>
     <h1>Escáner de Código de Barras</h1>
     <div id="barcode">
-      <video id="barcodevideo" autoplay playsinline style="width: 100%; max-width: 600px; border: 2px solid #000;"></video>
-      <canvas id="barcodecanvasg" style="position: absolute; top: 0; left: 0;"></canvas>
+      <video
+        id="barcodevideo"
+        autoplay
+        playsinline
+        style="width: 100%; max-width: 600px; border: 2px solid #000"
+      ></video>
+      <canvas
+        id="barcodecanvasg"
+        style="position: absolute; top: 0; left: 0"
+      ></canvas>
     </div>
     <canvas id="barcodecanvas"></canvas>
     <div id="result">Esperando código...</div>
