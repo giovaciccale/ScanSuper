@@ -37,7 +37,7 @@
 
           try {
             const response = await fetch(
-              `http://localhost:3000/api/precios/${codigo}`
+              `https://scansuper.up.railway.app/api/precios/${codigo}`
             );
 
             // Manejo explícito de estados de respuesta
@@ -85,7 +85,7 @@
 
                 try {
                   const response = await fetch(
-                    `http://localhost:3000/api/precios/supermercados?lat=${latitud}&lng=${longitud}`
+                    `https://scansuper.up.railway.app/api/precios/supermercados?lat=${latitud}&lng=${longitud}`
                   );
                   if (!response.ok) {
                     throw new Error(
@@ -288,7 +288,7 @@
           console.log(supermercadoId);
           try {
             const response = await fetch(
-              "http://localhost:3000/api/precios/registrar-precio",
+              "https://scansuper.up.railway.app/api/precios/registrar-precio",
               {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
