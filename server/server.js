@@ -6,6 +6,8 @@ import path from "path";
 import { fileURLToPath } from "url";
 import morgan from "morgan";
 import cors from "cors";
+import errorHandler from "./src/middleware/errorHandler.mid.js";
+import pathHandler from "./src/middleware/pathHandler.mid.js";
 
 
 
@@ -38,6 +40,10 @@ app.get("/", (req, res) => {
 
 //endpoints
 app.use("/", router);
+app.use(errorHandler)
+app.use(pathHandler)
+
+
 
 // Iniciar el servidor
 app.listen(3000, () => {

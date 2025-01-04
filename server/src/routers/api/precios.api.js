@@ -2,17 +2,12 @@ import { Router } from "express";
 import Precios from "../../models/Precio.js";
 import axios from "axios";
 import Supermercado from "../../models/Supermercado.js";
+import propsPrecios from "../../middleware/propsPrecios.mid.js"
 
 const PreciosRouter = Router();
 
-PreciosRouter.post("/registrar-precio", async (req, res) => {
+PreciosRouter.post("/registrar-precio",propsPrecios, async (req, res) => {
     const { codigo, precio, supermercadoId } = req.body; // supermercadoId en lugar de "tiendaId"
-
-    // Validar que los datos necesarios estén presentes
-    if (!codigo || !precio || !supermercadoId) {
-        return res.status(400).send("Faltan datos necesarios.");
-    }
-
     try {
         // Buscar el supermercado en la base de datos por su ID
         const supermercado = await Supermercado.findById(supermercadoId);
@@ -50,6 +45,7 @@ PreciosRouter.post("/registrar-precio", async (req, res) => {
         res.status(500).send("Error al registrar el precio.");
     }
 });
+
 
 PreciosRouter.post("/supermercado", async (req, res) => {
     const { nombre, direccion, lat, lng } = req.body;
@@ -110,8 +106,7 @@ PreciosRouter.get("/supermercados", async (req, res) => {
     }
 });
 
-
-//Precios de Producto x
+// Precios de Producto x
 PreciosRouter.get("/:codigo", async (req, res) => {
     const { codigo } = req.params;
 
@@ -121,19 +116,45 @@ PreciosRouter.get("/:codigo", async (req, res) => {
             .sort({ fecha: -1 })
             .populate("supermercado"); // Incluye los detalles del supermercado
 
-        if (resultados.length === 0) {
-            return res.status(404).send("No se encontraron precios para este producto.");
-        }
-
         // Consultar Open Food Facts para obtener los datos del producto
         const response = await axios.get(`https://world.openfoodfacts.org/api/v0/product/${codigo}.json`);
         const producto = response.data.status === 1 ? response.data.product : null;
 
-        res.json({
+        // Si no hay precios ni información del producto
+        if (resultados.length === 0 && !producto) {
+            return res.status(404).json({
+                mensaje: "No se encontraron precios ni información del producto.",
+                producto: {
+                    codigo: producto?.code || "No existe Producto en Food",
+                    nombre: producto?.product_name || "Nombre no disponible",
+                    marca: producto?.brands || "Marca no disponible",
+                    imagen: producto?.image_front_url || "https://via.placeholder.com/150"
+                },
+                precios: []
+            });
+        }
+
+        // Si no hay precios pero sí hay información del producto
+        if (resultados.length === 0) {
+            return res.status(200).json({
+                mensaje: "Producto sin precios asignados.",
+                producto: {
+                    codigo: producto?.code || "No existe Producto en Food",
+                    nombre: producto?.product_name || "Nombre no disponible",
+                    marca: producto?.brands || "Marca no disponible",
+                    imagen: producto?.image_front_url || "https://via.placeholder.com/150"
+                },
+                precios: []
+            });
+        }
+
+        // Si hay precios, devolver información completa
+        res.status(200).json({
             producto: {
+                codigo: producto?.code || "No existe Producto en Food",
                 nombre: producto?.product_name || "Nombre no disponible",
                 marca: producto?.brands || "Marca no disponible",
-                imagen: producto?.image_url || "https://via.placeholder.com/150"
+                imagen: producto?.image_front_url || "https://via.placeholder.com/150"
             },
             precios: resultados,
         });
@@ -142,10 +163,6 @@ PreciosRouter.get("/:codigo", async (req, res) => {
         res.status(500).send("Error al consultar los precios.");
     }
 });
-
-
-
-
 // Endpoint para buscar información de un producto en Open Food Facts
 PreciosRouter.get("/producto/:codigo", async (req, res) => {
     const { codigo } = req.params;
@@ -157,11 +174,12 @@ PreciosRouter.get("/producto/:codigo", async (req, res) => {
             // Producto encontrado
             const producto = response.data.product;
             res.json({
+                codigo: producto?.code || "No existe Producto en Food",
                 nombre: producto.product_name || "Nombre no disponible",
                 marca: producto.brands || "Marca no disponible",
                 ingredientes: producto.ingredients_text || "Ingredientes no disponibles",
                 calorias: producto.nutriments?.energy || "Calorías no disponibles",
-                imagen: producto.image_url || "Imagen no disponible"
+                imagen: producto.image_front_url || "Imagen no disponible"
             });
         } else {
             // Producto no encontrado

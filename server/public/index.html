@@ -37,12 +37,24 @@
 
           try {
             const response = await fetch(
-              `https://scansuper.up.railway.app/api/precios/${codigo}`
+              `http://localhost:3000/api/precios/${codigo}`
             );
+
+            // Manejo explícito de estados de respuesta
+            if (response.status === 404) {
+              const data = await response.json();
+              console.log("Respuesta 404:", data); // Depuración
+              document.getElementById("result").textContent =
+                data.mensaje || "Producto no encontrado.";
+              return;
+            }
+
             if (!response.ok) {
               throw new Error(`Error en la solicitud: ${response.status}`);
             }
+
             const data = await response.json();
+            console.log("Datos recibidos:", data); // Depuración
             mostrarInformacionProducto(data);
           } catch (error) {
             console.error("Error al buscar el producto:", error);
@@ -73,7 +85,7 @@
 
                 try {
                   const response = await fetch(
-                    `https://scansuper.up.railway.app/api/precios/supermercados?lat=${latitud}&lng=${longitud}`
+                    `http://localhost:3000/api/precios/supermercados?lat=${latitud}&lng=${longitud}`
                   );
                   if (!response.ok) {
                     throw new Error(
@@ -154,8 +166,15 @@
       <h2>${data.producto.nombre}</h2>
       <p><strong>Marca:</strong> ${data.producto.marca}</p>
       <p><strong>Estado:</strong> Producto sin precio asignado</p>
+       <br>
+    <img src="${
+      data.producto.imagen
+    }" alt="Imagen del producto" style="max-width: 200px;" />
+    <br>
+    <button id="add-to-cart">Agregar al Carrito</button>
+    <button id="update-price">Agregar Precio</button>
     `;
-            return;
+            return; // Terminar ejecución si no hay precios
           }
 
           // Ordenar precios por fecha (descendente)
@@ -166,71 +185,72 @@
           const precioAnterior = preciosOrdenados[1];
 
           infoContainer.innerHTML = `
-            <h2>${data.producto.nombre}</h2>
-            <p><strong>Marca:</strong> ${data.producto.marca}</p>
-            <p><strong>Último Precio:</strong> $${ultimoPrecio.precio}</p>
-            <p><strong>Último Supermercado :</strong> ${
-              ultimoPrecio.supermercado.nombre
-            }</p>
-            <p><strong>Última Dirección :</strong> ${
-              ultimoPrecio.supermercado.direccion
-            }</p>
-            <br>
-            <p><strong>Precio Anterior:</strong> $${
-              precioAnterior ? precioAnterior.precio : "N/A"
-            }</p>
-            <p><strong>Supermercado Anterior:</strong> ${
-              precioAnterior ? precioAnterior.supermercado.nombre : "N/A"
-            }</p>
-            <p><strong>Dirección Anterior:</strong> ${
-              precioAnterior ? precioAnterior.supermercado.direccion : "N/A"
-            }</p>
-            <br>
-            <img src="${
-              data.producto.imagen
-            }" alt="Imagen del producto" style="max-width: 200px;" />
-            <br>
-            <button id="add-to-cart">Agregar al Carrito</button>
-            <button id="update-price">Actualizar Precio</button>
-          `;
+    <h2>${data.producto.nombre}</h2>
+    <p><strong>Marca:</strong> ${data.producto.marca}</p>
+    <p><strong>Último Precio:</strong> $${ultimoPrecio.precio}</p>
+    <p><strong>Último Supermercado:</strong> ${
+      ultimoPrecio.supermercado.nombre
+    }</p>
+    <p><strong>Última Dirección:</strong> ${
+      ultimoPrecio.supermercado.direccion
+    }</p>
+    <br>
+    <p><strong>Precio Anterior:</strong> $${
+      precioAnterior ? precioAnterior.precio : "N/A"
+    }</p>
+    <p><strong>Supermercado Anterior:</strong> ${
+      precioAnterior ? precioAnterior.supermercado.nombre : "N/A"
+    }</p>
+    <p><strong>Dirección Anterior:</strong> ${
+      precioAnterior ? precioAnterior.supermercado.direccion : "N/A"
+    }</p>
+    <br>
+    <img src="${
+      data.producto.imagen
+    }" alt="Imagen del producto" style="max-width: 200px;" />
+    <br>
+    <button id="add-to-cart">Agregar al Carrito</button>
+    <button id="update-price">Agregar Precio</button>
+  `;
 
-          // Manejar el botón "Agregar al Carrito"
-          document
-            .getElementById("add-to-cart")
-            .addEventListener("click", () => {
+          // Verificar si los botones existen antes de asignar eventos
+          const addToCartButton = document.getElementById("add-to-cart");
+          const updatePriceButton = document.getElementById("update-price");
+
+          if (addToCartButton) {
+            addToCartButton.addEventListener("click", () => {
               agregarAlCarrito(data.producto, ultimoPrecio);
             });
+          }
 
-          // Manejar el botón "Actualizar Precio"
-          document
-            .getElementById("update-price")
-            .addEventListener("click", () => {
+          if (updatePriceButton) {
+            updatePriceButton.addEventListener("click", () => {
               const supermercadoSeleccionado = JSON.parse(
                 localStorage.getItem("supermercadoSeleccionado")
               );
 
               if (!supermercadoSeleccionado || !supermercadoSeleccionado.id) {
                 alert(
-                  "Por favor, selecciona un supermercado antes de actualizar el precio."
+                  "Por favor, selecciona un supermercado antes de agregar un precio."
                 );
                 return;
               }
 
               actualizarPrecio(
-                ultimoPrecio.codigo,
+                data.producto.codigo,
                 supermercadoSeleccionado.id
               );
-              console.log("Código:", ultimoPrecio.codigo);
+              console.log("Código:", data.producto.codigo);
               console.log(
                 "Supermercado seleccionado:",
                 supermercadoSeleccionado.id
               );
             });
+          }
         }
 
-        let carrito = [];
-
         // Función para agregar un producto al carrito
+        let carrito = [];
         function agregarAlCarrito(producto, precio) {
           carrito.push({
             nombre: producto.nombre,
@@ -268,7 +288,7 @@
           console.log(supermercadoId);
           try {
             const response = await fetch(
-              "https://scansuper.up.railway.app/api/precios/registrar-precio",
+              "http://localhost:3000/api/precios/registrar-precio",
               {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -285,11 +305,11 @@
             }
 
             const data = await response.json();
-            alert("Precio actualizado correctamente.");
+            alert("Precio agregado correctamente.");
             console.log(data);
           } catch (error) {
-            console.error("Error al actualizar el precio:", error);
-            alert("No se pudo actualizar el precio.");
+            console.error("Error al agregar el precio:", error);
+            alert("No se pudo agregar el precio.");
           }
         }
       });
