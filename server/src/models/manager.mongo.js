@@ -1,5 +1,6 @@
 import Precios from "./Precio.js";
 import Supermercado from "./Supermercado.js";
+import Producto from "./Producto.js";
 
 class MongoManager {
   constructor(model) {
@@ -26,7 +27,7 @@ class MongoManager {
       throw error;
     }
   }
-  async readOne(id) {
+  async  readOne(id) {
     try {
       const one = await this.model.findById(id);
       if (!one) {
@@ -39,6 +40,21 @@ class MongoManager {
       throw error;
     }
   }
+
+  async readOneCode(codigo) {
+    try {
+      const one = await this.model.findOne({ codigo });
+      if (!one) {
+        const error = new Error("There isn't event");
+        error.statusCode = 404;
+        throw error;
+      }
+      return one;
+    } catch (error) {
+      throw error;
+    }
+  }
+  
   async update(id, data) {
     try {
       const opt = { new: true };
@@ -71,6 +87,7 @@ class MongoManager {
 
 const users = new MongoManager(Precios);
 const events = new MongoManager(Supermercado);
+const producto = new MongoManager(Producto);
 //const orders = 
 
-export { users, events }
+export { users, events, producto }

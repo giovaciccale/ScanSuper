@@ -29,23 +29,6 @@ async function actualizarPrecio(codigo, supermercadoId) {
     alert("No se pudo agregar el precio.");
   }
 }
-
-function actualizarCarrito() {
-  const carritoContainer = document.getElementById("carrito");
-  carritoContainer.innerHTML = `
-      <h3>Carrito:</h3>
-      <ul>
-        ${carrito
-          .map(
-            (item) => `
-            <li>${item.nombre} - $${item.precio}</li>
-          `
-          )
-          .join("")}
-      </ul>
-    `;
-}
-
 async function mostrarInformacionProducto(data) {
     const infoContainer = document.getElementById("product-info");
   
@@ -54,6 +37,7 @@ async function mostrarInformacionProducto(data) {
       infoContainer.innerHTML = `
         <h2>${data.producto.nombre}</h2>
         <p><strong>Marca:</strong> ${data.producto.marca}</p>
+        <p><strong>Nombre:</strong> ${data.producto.nombre}</p>
         <p><strong>Estado:</strong> Producto sin precio asignado</p>
         <br>
         <img src="${data.producto.imagen}" alt="Imagen del producto" style="max-width: 200px;" />
@@ -100,15 +84,9 @@ async function mostrarInformacionProducto(data) {
       `;
     }
   
-    // Asignar eventos a los botones después de insertar el contenido en el DOM
-    const addToCartButton = document.getElementById("add-to-cart");
+
     const updatePriceButton = document.getElementById("update-price");
-  
-    if (addToCartButton) {
-      addToCartButton.addEventListener("click", () => {
-        alert("Producto agregado al carrito (implementar lógica aquí).");
-      });
-    }
+
   
     if (updatePriceButton) {
       updatePriceButton.addEventListener("click", () => {
@@ -123,12 +101,10 @@ async function mostrarInformacionProducto(data) {
           return;
         }
   
-        actualizarPrecio(data.producto.codigo, supermercadoSeleccionado.id);
+         actualizarPrecio(data.producto.codigo, supermercadoSeleccionado.id);
       });
     }
-  }
-  
-
+}
 function mostrarSupermercadosCercanos(data) {
   const supermarketsContainer = document.getElementById("supermarkets");
   supermarketsContainer.innerHTML = `
@@ -164,4 +140,19 @@ function mostrarSupermercadosCercanos(data) {
       supermarketsContainer.innerHTML = "";
     });
   });
+}
+function actualizarCarrito() {
+  const carritoContainer = document.getElementById("carrito");
+  carritoContainer.innerHTML = `
+      <h3>Carrito:</h3>
+      <ul>
+        ${carrito
+          .map(
+            (item) => `
+            <li>${item.nombre} - $${item.precio}</li>
+          `
+          )
+          .join("")}
+      </ul>
+    `;
 }

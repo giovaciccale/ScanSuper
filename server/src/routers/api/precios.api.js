@@ -15,11 +15,10 @@ PreciosRouter.post("/registrar-precio",propsPrecios, async (req, res) => {
             return res.status(404).send("Supermercado no encontrado.");
         }
 
-        // Consultar Open Food Facts antes de registrar
-        const response = await axios.get(`https://world.openfoodfacts.org/api/v0/product/${codigo}.json`);
-
-        if (response.data.status === 1) {
-            const producto = response.data.product;
+        // Consultar en BBDD antes de registrar
+        const response = await axios.get(`http://localhost:3000/api/producto/${codigo}`);
+        if (response.data.statusCode === 200 ) {
+            const producto = response.data.response;
 
             // Crear el precio referenciando al supermercado encontrado
             const nuevoPrecio = await Precios.create({
@@ -30,15 +29,15 @@ PreciosRouter.post("/registrar-precio",propsPrecios, async (req, res) => {
             });
 
             res.send({
-                message: "Precio registrado exitosamente con datos de Open Food Facts.",
+                message: "Precio registrado exitosamente con datos de la BBDD.",
                 precio: nuevoPrecio,
                 producto: {
-                    nombre: producto.product_name || "Nombre no disponible",
-                    marca: producto.brands || "Marca no disponible"
+                    nombre: producto.nombre || "Nombre no disponible",
+                    marca: producto.marca || "Marca no disponible"
                 }
             });
         } else {
-            res.status(404).send("El producto no está en Open Food Facts. No se registró el precio.");
+            res.status(404).send("El producto no está en Base de Datos. No se registró el precio.");
         }
     } catch (error) {
         console.error(error);
@@ -90,7 +89,7 @@ PreciosRouter.get("/supermercados", async (req, res) => {
                     near: { type: "Point", coordinates: [parseFloat(lng), parseFloat(lat)] },
                     distanceField: "distancia",
                     spherical: true,
-                    maxDistance: distancia * 1000 // Convertir a metros
+                    maxDistance: distancia * 2000 // Convertir a metros
                 }
             }
         ]);
@@ -115,20 +114,23 @@ PreciosRouter.get("/:codigo", async (req, res) => {
         const resultados = await Precios.find({ codigo })
             .sort({ fecha: -1 })
             .populate("supermercado"); // Incluye los detalles del supermercado
+        
+        console.log(resultados)
 
         // Consultar Open Food Facts para obtener los datos del producto
-        const response = await axios.get(`https://world.openfoodfacts.org/api/v0/product/${codigo}.json`);
-        const producto = response.data.status === 1 ? response.data.product : null;
+        const response = await axios.get(`http://localhost:3000/api/producto/${codigo}`);
+        const producto = response?.data?.statusCode === 200 ? response.data.response : null;
+
 
         // Si no hay precios ni información del producto
-        if (resultados.length === 0 && !producto) {
+        if (resultados.length === 0 && !codigo) {
             return res.status(404).json({
                 mensaje: "No se encontraron precios ni información del producto.",
                 producto: {
-                    codigo: producto?.code || "No existe Producto en Food",
-                    nombre: producto?.product_name || "Nombre no disponible",
-                    marca: producto?.brands || "Marca no disponible",
-                    imagen: producto?.image_front_url || "https://via.placeholder.com/150"
+                    codigo: producto?.codigo || "No existe Producto en BBDD",
+                    nombre: producto?.nombre || "Nombre no disponible",
+                    marca: producto?.marca || "Marca no disponible",
+                    imagen: producto?.imagen || "https://via.placeholder.com/150"
                 },
                 precios: []
             });
@@ -139,10 +141,10 @@ PreciosRouter.get("/:codigo", async (req, res) => {
             return res.status(200).json({
                 mensaje: "Producto sin precios asignados.",
                 producto: {
-                    codigo: producto?.code || "No existe Producto en Food",
-                    nombre: producto?.product_name || "Nombre no disponible",
-                    marca: producto?.brands || "Marca no disponible",
-                    imagen: producto?.image_front_url || "https://via.placeholder.com/150"
+                    codigo: producto?.codigo || "No existe Producto en BBDD",
+                    nombre: producto?.nombre || "Nombre no disponible",
+                    marca: producto?.marca || "Marca no disponible",
+                    imagen: producto?.imagen || "https://via.placeholder.com/150"
                 },
                 precios: []
             });
@@ -151,10 +153,10 @@ PreciosRouter.get("/:codigo", async (req, res) => {
         // Si hay precios, devolver información completa
         res.status(200).json({
             producto: {
-                codigo: producto?.code || "No existe Producto en Food",
-                nombre: producto?.product_name || "Nombre no disponible",
-                marca: producto?.brands || "Marca no disponible",
-                imagen: producto?.image_front_url || "https://via.placeholder.com/150"
+                codigo: producto?.codigo || "No existe Producto en Food",
+                nombre: producto?.nombre || "Nombre no disponible",
+                marca: producto?.marca || "Marca no disponible",
+                imagen: producto?.imagen || "https://via.placeholder.com/150"
             },
             precios: resultados,
         });
@@ -163,31 +165,29 @@ PreciosRouter.get("/:codigo", async (req, res) => {
         res.status(500).send("Error al consultar los precios.");
     }
 });
-// Endpoint para buscar información de un producto en Open Food Facts
+// Endpoint para buscar información de un producto de la BBDD
 PreciosRouter.get("/producto/:codigo", async (req, res) => {
     const { codigo } = req.params;
 
     try {
-        const response = await axios.get(`https://world.openfoodfacts.org/api/v0/product/${codigo}.json`);
+        const response = await axios.get(`http://localhost:3000/api/producto/${codigo}`);
 
-        if (response.data.status === 1) {
+        if (response.data.statusCode === 200 ) {
             // Producto encontrado
-            const producto = response.data.product;
+            const producto = response.data.response;
             res.json({
-                codigo: producto?.code || "No existe Producto en Food",
-                nombre: producto.product_name || "Nombre no disponible",
-                marca: producto.brands || "Marca no disponible",
-                ingredientes: producto.ingredients_text || "Ingredientes no disponibles",
-                calorias: producto.nutriments?.energy || "Calorías no disponibles",
-                imagen: producto.image_front_url || "Imagen no disponible"
+                codigo: producto?.codigo || "No existe Producto en Food",
+                nombre: producto.nombre || "Nombre no disponible",
+                marca: producto.marca || "Marca no disponible",
+                imagen: producto.imagen || "Imagen no disponible"
             });
         } else {
             // Producto no encontrado
-            res.status(404).send("Producto no encontrado en Open Food Facts.");
+            res.status(404).send("Producto no encontrado en Open la BBDD.");
         }
     } catch (error) {
         console.error(error);
-        res.status(500).send("Error al consultar Open Food Facts.");
+        res.status(500).send("Error al consultar en la BBDD.");
     }
 });
 
