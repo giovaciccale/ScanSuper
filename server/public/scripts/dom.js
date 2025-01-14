@@ -91,7 +91,7 @@ async function procesarCodigo(codigo) {
 
           try {
             const response = await fetch(
-              `http://https://scansuper.up.railway.app/api/precios/supermercados?lat=${latitud}&lng=${longitud}`
+              `https://scansuper.up.railway.app/api/precios/supermercados?lat=${latitud}&lng=${longitud}`
             );
             if (!response.ok) {
               throw new Error(`Error en la solicitud: ${response.status}`);
