@@ -1,3 +1,5 @@
+
+
 document.addEventListener("DOMContentLoaded", function () {
   let latitud = null;
   let longitud = null;
@@ -13,45 +15,64 @@ document.addEventListener("DOMContentLoaded", function () {
   barcode.init();
   console.log("Handler activado");
 
+  // Manejar código escaneado
   barcode.setHandler(async function (codigo) {
-    console.log("Código escaneado:", codigo);
-    document.getElementById(
-      "result"
-    ).textContent = `Código detectado: ${codigo}`;
-    sound.play();
+    await procesarCodigo(codigo);
+  });
 
-    const supermercadoSeleccionado = JSON.parse(
-      localStorage.getItem("supermercadoSeleccionado")
-    );
-    if (!supermercadoSeleccionado || !supermercadoSeleccionado.id) {
-      alert("Por favor, selecciona un supermercado antes de escanear.");
+  // Manejar código manual
+  document.getElementById("submit-code").addEventListener("click", async () => {
+    const codigoManual = document.getElementById("manual-code").value.trim();
+
+    if (!codigoManual) {
+      alert("Por favor, ingresa un código válido.");
       return;
     }
 
-    try {
-      const response = await fetch(
-        `https://scansuper.up.railway.app/api/precios/${codigo}`
-      );
-
-      if (response.status === 404) {
-        const data = await response.json();
-        document.getElementById("result").textContent =
-          data.mensaje || "Producto no encontrado.";
-        return;
-      }
-
-      if (!response.ok) {
-        throw new Error(`Error en la solicitud: ${response.status}`);
-      }
-
-      const data = await response.json();
-      await mostrarInformacionProducto(data);
-    } catch (error) {
-      console.error("Error al buscar el producto:", error);
-      document.getElementById("result").textContent =
-        "Producto no encontrado o error en la solicitud.";
-    }
+    await procesarCodigo(codigoManual);
   });
+
+
+// Función para procesar códigos (tanto escaneados como manuales)
+async function procesarCodigo(codigo) {
+  console.log("Código detectado o ingresado:", codigo);
+  document.getElementById("result").textContent = `Código detectado: ${codigo}`;
+  sound.play();
+
+  const supermercadoSeleccionado = JSON.parse(
+    localStorage.getItem("supermercadoSeleccionado")
+  );
+  if (!supermercadoSeleccionado || !supermercadoSeleccionado.id) {
+    alert(
+      "Por favor, selecciona un supermercado antes de escanear o ingresar un código."
+    );
+    return;
+  }
+
+  try {
+    const response = await fetch(`https://scansuper.up.railway.app/api/precios/${codigo}`);
+
+    if (response.status === 404) {
+      const data = await response.json();
+      document.getElementById("result-manual").textContent =
+        data.mensaje || "Producto no encontrado.";
+      return;
+    }
+
+    if (!response.ok) {
+      throw new Error(`Error en la solicitud: ${response.status}`);
+    }
+
+    const data = await response.json();
+    await mostrarInformacionProducto(data);
+  } catch (error) {
+    console.error("Error al buscar el producto:", error);
+    document.getElementById("result-manual").textContent =
+      "Producto no encontrado o error en la solicitud.";
+  }
+}
+
+
 
   document
     .getElementById("get-location")
@@ -70,7 +91,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
           try {
             const response = await fetch(
-              `https://scansuper.up.railway.app/api/precios/supermercados?lat=${latitud}&lng=${longitud}`
+              `http://https://scansuper.up.railway.app/api/precios/supermercados?lat=${latitud}&lng=${longitud}`
             );
             if (!response.ok) {
               throw new Error(`Error en la solicitud: ${response.status}`);
@@ -95,7 +116,6 @@ document.addEventListener("DOMContentLoaded", function () {
         }
       );
     });
-    
 
   let carrito = [];
   function agregarAlCarrito(producto, precio) {
