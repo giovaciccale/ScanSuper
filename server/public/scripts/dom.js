@@ -91,7 +91,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     try {
-      const response = await fetch(`http://localhost:3000/api/precios/${codigo}`);
+      const response = await fetch(`https://scansuper.up.railway.app/api/precios/${codigo}`);
 
       if (!response.ok) {
         if (response.status === 404) {
@@ -165,7 +165,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     try {
       const response = await fetch(
-        `http://localhost:3000/api/precios/registrar-precio`,
+        `https://scansuper.up.railway.app/api/precios/registrar-precio`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -204,7 +204,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
       try {
         const response = await fetch(
-          `http://localhost:3000/api/precios/supermercados?lat=${latitud}&lng=${longitud}`
+          `https://scansuper.up.railway.app/api/precios/supermercados?lat=${latitud}&lng=${longitud}`
         );
         if (!response.ok) {
           throw new Error(`Error en la solicitud: ${response.status}`);
