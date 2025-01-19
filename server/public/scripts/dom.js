@@ -10,7 +10,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Configurar manualmente el flujo de video para verificar que funcione
     navigator.mediaDevices
-      .getUserMedia({ video: { facingMode: "user" } })
+      .getUserMedia({ video: { facingMode: "environment" } })
       .then((stream) => {
         videoElement.srcObject = stream;
         videoElement.play();
