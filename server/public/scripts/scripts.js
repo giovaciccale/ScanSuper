@@ -8,7 +8,7 @@ async function actualizarPrecio(codigo, supermercadoId) {
   try {
     // Registrar el nuevo precio
     const response = await fetch(
-      "https://scansuper.up.railway.app/api/precios/registrar-precio",
+      "http://localhost:3000/api/precios/registrar-precio",
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -28,6 +28,7 @@ async function actualizarPrecio(codigo, supermercadoId) {
 
     // Solicitar la información actualizada del producto
     await cargarInformacionProductoActualizada(codigo);
+    console.log(codigo)
 
   } catch (error) {
     console.error("Error al agregar el precio:", error);
@@ -163,7 +164,7 @@ function actualizarCarrito() {
 async function cargarInformacionProductoActualizada(codigo) {
   try {
     // Hacer la solicitud para obtener la información actualizada del producto
-    const response = await fetch(`https://scansuper.up.railway.app/api/precios/${codigo}`);
+    const response = await fetch(`http://localhost:3000/api/precios/${codigo}`);
     
     if (!response.ok) {
       throw new Error(`Error al obtener información del producto: ${response.status}`);
